@@ -3,10 +3,11 @@
 const $showsList = $("#showsList");
 const $episodesArea = $("#episodesArea");
 const $searchForm = $("#searchForm");
-// base url https://api.tvmaze.com/
-const URL = 'https://api.tvmaze.com/search/shows';
-// naming convention
-const altImage = 'https://tinyurl.com/tv-missing';
+// base url https://api.tvmaze.com/ DONE
+const BASE_URL = 'https://api.tvmaze.com';
+const SEARCH_ENDPOINT = '/search/shows';
+// naming convention -DONE
+const ALT_IMG= 'https://tinyurl.com/tv-missing';
 
 
 /** Given a search term, search for tv shows that match that query.
@@ -21,13 +22,25 @@ async function getShowsByTerm(term) {
 
   // get the response from API using axios
   // URL should not be green(a class)
-  let response = await axios.get(URL, { params: { q: term } });
-  let shows = response.data.map(show => ({
-    id: show.show.id,
-    name: show.show.name,
-    summary: show.show.summary,
-    image: show.show.image
-  }));
+  let response = await axios.get(`${BASE_URL}${SEARCH_ENDPOINT}`, { params: { q: term } });
+// console.log('response.data ',response.data)
+  let shows = response.data.map(show => {//need more descriptive name like showAndScore
+
+    let imageURL;
+    // if there is no image url provided, we display a default image.
+    if (!show.show.image) {//moved this from Display function
+      imageURL = ALT_IMG;
+    } else {
+      imageURL = show.show.image.original;
+    }
+
+    return {
+      id: show.show.id,
+      name: show.show.name,
+      summary: show.show.summary,
+      image: imageURL
+    };
+  });
   return shows;
 }
 
@@ -40,20 +53,13 @@ async function getShowsByTerm(term) {
 function displayShows(shows) {
   $showsList.empty();
   // put the logic in getShowsByTerm
-  for (const show of shows) {
-    let imageURL;
-    // if there is no image url provided, we display a default image.
-    if (!show.image) {
-      imageURL = altImage;
-    } else {
-      imageURL = show.image.original;
-    }
+  for (let show of shows) {
 
     const $show = $(`
         <div data-show-id="${show.id}" class="Show col-md-12 col-lg-6 mb-4">
          <div class="media">
            <img
-              src="${imageURL}"
+              src="${show.image}"
               alt="${show.name}"
               class="w-25 me-3">
            <div class="media-body">
@@ -90,7 +96,14 @@ $searchForm.on("submit", async function handleSearchForm(evt) {
   await searchShowsAndDisplay();
 });
 
+$showsList.on("click", async function handleEpisodeList(evt) {
+console.log(evt.target.parentElement.parentElement.parentElement.dataset)
+});
 
+
+
+
+//http://api.tvmaze.com/shows/SHOW-ID-HERE/episodes.
 /** Given a show ID, get from API and return (promise) array of episodes:
  *      { id, name, season, number }
  */
