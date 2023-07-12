@@ -7,7 +7,7 @@ const $searchForm = $("#searchForm");
 const BASE_URL = 'https://api.tvmaze.com';
 const SEARCH_ENDPOINT = '/search/shows';
 // naming convention -DONE
-const ALT_IMG= 'https://tinyurl.com/tv-missing';
+const ALT_IMG = 'https://tinyurl.com/tv-missing';
 
 
 /** Given a search term, search for tv shows that match that query.
@@ -23,7 +23,7 @@ async function getShowsByTerm(term) {
   // get the response from API using axios
   // URL should not be green(a class)
   let response = await axios.get(`${BASE_URL}${SEARCH_ENDPOINT}`, { params: { q: term } });
-// console.log('response.data ',response.data)
+  // console.log('response.data ',response.data)
   let shows = response.data.map(show => {//need more descriptive name like showAndScore
 
     let imageURL;
@@ -96,22 +96,58 @@ $searchForm.on("submit", async function handleSearchForm(evt) {
   await searchShowsAndDisplay();
 });
 
+async function getEpisodesAndDisplay(showId) {
+  let episodes = await getEpisodesOfShow(showId);
+  displayEpisodes(episodes);
+}
+
 $showsList.on("click", async function handleEpisodeList(evt) {
-console.log(evt.target.parentElement.parentElement.parentElement.dataset)
+  // console.log(evt.target.parentElement.parentElement.parentElement.dataset.showId);
+  let showId = evt.target.parentElement.parentElement.parentElement.dataset.showId;
+  getEpisodesAndDisplay(showId);
+
 });
 
 
-
-
-//http://api.tvmaze.com/shows/SHOW-ID-HERE/episodes.
 /** Given a show ID, get from API and return (promise) array of episodes:
  *      { id, name, season, number }
  */
 
-// async function getEpisodesOfShow(id) { }
+async function getEpisodesOfShow(id) {
+
+  let response = await axios(`${BASE_URL}/shows/${id}/episodes`);
+  console.log('response from getEpisodesOfShow', response.data);
+
+  // console.log(response.data[0].id);
+  let episodes = response.data.map(episode => ({
+    id: episode.id,
+    name: episode.name,
+    season: episode.season,
+    number: episode.number
+  }));
+  // console.log('episodes', episodes);
+
+  return episodes;
+
+}
 
 /** Write a clear docstring for this function... */
 
-// function displayEpisodes(episodes) { }
+function displayEpisodes(episodes) {
+  $('#episodesList').empty();
+  if (episodes.length !== 0) {
+    $episodesArea.show();
+
+    for (let episode of episodes) {
+      let { name, season, number } = episode;
+      if (!name) {
+        name = '';
+      }
+      $('#episodesList').append($('<li>').text(`${name} season ${season}, number ${number}`));
+    }
+  }
+
+  // console.log('in displayEpisodes: episodes =', episodes);
+}
 
 // add other functions that will be useful / match our structure & design
