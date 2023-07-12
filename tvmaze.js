@@ -3,9 +3,10 @@
 const $showsList = $("#showsList");
 const $episodesArea = $("#episodesArea");
 const $searchForm = $("#searchForm");
+// base url https://api.tvmaze.com/
 const URL = 'https://api.tvmaze.com/search/shows';
-const altImage = 'https://tinyurl.com/tv-missing.';
-//search/shows?q=girls
+// naming convention
+const altImage = 'https://tinyurl.com/tv-missing';
 
 
 /** Given a search term, search for tv shows that match that query.
@@ -19,6 +20,7 @@ async function getShowsByTerm(term) {
   // ADD: Remove placeholder & make request to TVMaze search shows API.
 
   // get the response from API using axios
+  // URL should not be green(a class)
   let response = await axios.get(URL, { params: { q: term } });
   let shows = response.data.map(show => ({
     id: show.show.id,
@@ -37,15 +39,21 @@ async function getShowsByTerm(term) {
 
 function displayShows(shows) {
   $showsList.empty();
-
+  // put the logic in getShowsByTerm
   for (const show of shows) {
-    // let =show.image.original|| altImage
-    if (!show.image.original) show.image.original = altImage;
+    let imageURL;
+    // if there is no image url provided, we display a default image.
+    if (!show.image) {
+      imageURL = altImage;
+    } else {
+      imageURL = show.image.original;
+    }
+
     const $show = $(`
         <div data-show-id="${show.id}" class="Show col-md-12 col-lg-6 mb-4">
          <div class="media">
            <img
-              src="${show.image.original}"
+              src="${imageURL}"
               alt="${show.name}"
               class="w-25 me-3">
            <div class="media-body">
@@ -70,6 +78,7 @@ function displayShows(shows) {
 
 async function searchShowsAndDisplay() {
   const term = $("#searchForm-term").val();
+  $("#searchForm-term").val('');
   const shows = await getShowsByTerm(term);
 
   $episodesArea.hide();
