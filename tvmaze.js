@@ -24,20 +24,20 @@ async function getShowsByTerm(term) {
   // URL should not be green(a class)
   let response = await axios.get(`${BASE_URL}${SEARCH_ENDPOINT}`, { params: { q: term } });
   // console.log('response.data ',response.data)
-  let shows = response.data.map(show => {//need more descriptive name like showAndScore
+  let shows = response.data.map(showAndScore => {//need more descriptive name like showAndScore
 
     let imageURL;
     // if there is no image url provided, we display a default image.
-    if (!show.show.image) {//moved this from Display function
+    if (!showAndScore.show.image) {//moved this from Display function
       imageURL = ALT_IMG;
     } else {
-      imageURL = show.show.image.original;
+      imageURL = showAndScore.show.image.original;
     }
 
     return {
-      id: show.show.id,
-      name: show.show.name,
-      summary: show.show.summary,
+      id: showAndScore.show.id,
+      name: showAndScore.show.name,
+      summary: showAndScore.show.summary,
       image: imageURL
     };
   });
@@ -48,11 +48,13 @@ async function getShowsByTerm(term) {
 /** Given list of shows, create markup for each and append to DOM.
  *
  * A show is {id, name, summary, image}
+ *
+ *
  * */
 
 function displayShows(shows) {
   $showsList.empty();
-  // put the logic in getShowsByTerm
+
   for (let show of shows) {
 
     const $show = $(`
@@ -96,14 +98,21 @@ $searchForm.on("submit", async function handleSearchForm(evt) {
   await searchShowsAndDisplay();
 });
 
+
+
+//**************EPISODES */
+
+/** function to retrieve episodes and display  */
 async function getEpisodesAndDisplay(showId) {
   let episodes = await getEpisodesOfShow(showId);
   displayEpisodes(episodes);
 }
 
+
+/** event handler to retrive the show id  when clicking the Episodes Button */ //TODO move to bottom
 $showsList.on("click", async function handleEpisodeList(evt) {
   // console.log(evt.target.parentElement.parentElement.parentElement.dataset.showId);
-  let showId = evt.target.parentElement.parentElement.parentElement.dataset.showId;
+  let showId = evt.target.parentElement.parentElement.parentElement.dataset.showId;// check jquery closest()
   getEpisodesAndDisplay(showId);
 
 });
@@ -116,22 +125,31 @@ $showsList.on("click", async function handleEpisodeList(evt) {
 async function getEpisodesOfShow(id) {
 
   let response = await axios(`${BASE_URL}/shows/${id}/episodes`);
-  console.log('response from getEpisodesOfShow', response.data);
 
-  // console.log(response.data[0].id);
+
   let episodes = response.data.map(episode => ({
     id: episode.id,
     name: episode.name,
     season: episode.season,
     number: episode.number
   }));
-  // console.log('episodes', episodes);
+
 
   return episodes;
 
 }
 
 /** Write a clear docstring for this function... */
+/**
+ *
+ *
+ *
+ */
+
+
+
+/** this function populates an unordered list of all episodes for the selected show */
+/** the  episode area is enabled and displays the list of episodes */ //inputs , outputs, examples
 
 function displayEpisodes(episodes) {
   $('#episodesList').empty();
@@ -143,11 +161,12 @@ function displayEpisodes(episodes) {
       if (!name) {
         name = '';
       }
-      $('#episodesList').append($('<li>').text(`${name} season ${season}, number ${number}`));
+      $('#episodesList')
+        .append($('<li>')
+        .text(`${name} season ${season}, number ${number}`));
     }
   }
 
-  // console.log('in displayEpisodes: episodes =', episodes);
 }
 
 // add other functions that will be useful / match our structure & design
